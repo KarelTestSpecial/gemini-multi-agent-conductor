@@ -1,9 +1,11 @@
 ---
 name: multi-agent-conductor
-description: Multi-agent coordination for Gemini CLI using Conductor tracks. Use when splitting a task between a "Lead Architect" and "Execution Agent" to maintain state synchronization and follow structured roadmaps.
+description: Multi-agent coordination for Gemini CLI using Conductor tracks. Use when splitting a task between a "Lead Architect" and "Execution Agent".
 ---
 
-# Multi-Agent Conductor (v1.2 - Live Observability)
+# Multi-Agent Conductor (v1.3 - Interactive Observability)
+
+This skill defines the protocol for a "Lead Architect" session to supervise and guide an "Execution Agent" session through complex tasks using Conductor tracks.
 
 ## 🚀 Initialization Protocol (MANDATORY)
 Upon activation, the agent MUST determine its role immediately:
@@ -12,13 +14,14 @@ Upon activation, the agent MUST determine its role immediately:
    - If '{"role": "Lead Architect"}', prefix all high-level responses with '🛡️ [Lead Architect]'.
    - If '{"role": "Execution Agent"}', prefix all implementation responses with '⚙️ [Execution Agent]'.
 3. **Ask User:** If the file is missing or ambiguous, the agent MUST ask: "Am I the Lead Architect or the Execution Agent for this session?"
-4. **NO GUESSING:** An agent MUST NOT assume the Lead Architect role by default.
 
-## 📡 Live Observability (LEAD ARCHITECT ONLY)
-The Lead Architect MUST actively monitor the Execution Agent's session to ensure safety and alignment:
-1. **Identify Session:** Locate the active session ID in '~/.gemini/tmp/'.
-2. **Monitor Tools:** Periodically inspect 'tool-outputs/' in the target session to see what the agent is actually doing.
-3. **Audit History:** Use the session logs to verify that the agent is following the directives.
+## 📡 Lead Architect Monitoring (LEAD ARCHITECT ONLY)
+The Lead Architect MUST bridge the visibility gap by identifying and monitoring the Execution Agent's live session:
+1. **Session Discovery:** The Lead Architect MUST list recent session logs in '~/.gemini/tmp/'.
+2. **Interactive Verification:** The Lead Architect MUST read snippets from the most likely sessions and ask the developer:
+   - "I found activity in session [ID]. Is this the conversation you see in the second terminal?"
+   - "Does this match the timestamp [Time] and activity [Task] of your other session?"
+3. **Pulse Check:** Once the session is verified, the Lead Architect MUST periodically perform a 'Session Tap' on 'tool-outputs/' to ensure the Execution Agent is on track.
 
 ## Roles
 
@@ -26,7 +29,7 @@ The Lead Architect MUST actively monitor the Execution Agent's session to ensure
 - **Responsibility:** High-level strategy, safety oversight, and state validation.
 - **Workflow:**
     1. Define 'spec.md' and 'plan.md' in 'conductor/tracks/'.
-    2. Monitor the Execution Agent's logs and session history.
+    2. Monitor the Execution Agent's live session logs (Discovery + Tap).
     3. Provide '[DIRECTIVE]' entries in 'conductor/execution_log.md'.
     4. Validate each phase before the Execution Agent proceeds.
 
@@ -39,14 +42,9 @@ The Lead Architect MUST actively monitor the Execution Agent's session to ensure
     4. **MANDATORY:** After EVERY successful file update or major phase, execute 'node conductor/sync.js ping'.
 
 ## Coordination & Communication Protocol
-
-### The Shared Log Channel ('conductor/execution_log.md')
-1. **Log Format:**
-   - '[ACTION]': Tool calls and their intent.
-   - '[STATUS]': Phase completion or blockages.
-   - '[QUERY]': Execution Agent asking for advice.
-   - '[DIRECTIVE]': Lead Architect providing specific instructions.
+- **Shared Log:** All high-level handovers happen via 'conductor/execution_log.md'.
+- **Inter-Agent Messages:** Use '[ACTION]', '[STATUS]', '[QUERY]', and '[DIRECTIVE]'.
 
 ## Safety Guardrails
-- **User Permission:** No message is sent between agents without the user confirming the 'WriteFile' or 'run_shell_command' that updates the log.
-- **Role Lock:** Once a role is confirmed, it stays locked for the duration of the session.
+- **Role Lock:** Roles remain fixed for the duration of the track.
+- **User Permission:** No inter-agent communication without user-confirmed writes to 'execution_log.md'.
