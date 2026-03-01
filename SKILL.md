@@ -3,29 +3,24 @@ name: multi-agent-conductor
 description: Multi-agent coordination for Gemini CLI using Conductor tracks. Use when splitting a task between a "Lead Architect" and "Execution Agent".
 ---
 
-# Multi-Agent Conductor (v1.4 - Collaborative Discovery)
-
-This skill defines the protocol for a "Lead Architect" session to supervise and guide an "Execution Agent" session through complex tasks using Conductor tracks.
+# Multi-Agent Conductor (v1.5 - Pulse Ready)
 
 ## 🚀 Initialization Protocol (MANDATORY)
-Upon activation, the agent MUST determine its role immediately:
-1. **Check Config:** Look for 'conductor/agent_role.json'.
-2. **Adopt Role:** 
-   - If '{"role": "Lead Architect"}', prefix all high-level responses with '🛡️ [Lead Architect]'.
-   - If '{"role": "Execution Agent"}', prefix all implementation responses with '⚙️ [Execution Agent]'.
-3. **Ask User:** If the file is missing or ambiguous, the agent MUST ask: "Am I the Lead Architect or the Execution Agent for this session?"
+Upon activation, the agent MUST determine its role and deploy the sync engine:
+1. **Role Check:** Check 'conductor/agent_role.json' or ask the user.
+2. **Sync Engine Deployment:** 
+   - Ensure 'conductor/' directory exists.
+   - Copy 'scripts/sync.js' from the skill-map to 'conductor/sync.js' in the workspace.
+3. **Visual Identity:** Use '🛡️ [Lead Architect]' or '⚙️ [Execution Agent]' prefixes.
 
 ## 📡 Lead Architect Monitoring (LEAD ARCHITECT ONLY)
-The Lead Architect MUST bridge the visibility gap by identifying and monitoring the Execution Agent's live session:
-1. **Session Discovery:** The Lead Architect MUST list recent session logs in '~/.gemini/tmp/'.
-2. **Interactive Verification:** The Lead Architect MUST read snippets from the most likely sessions and ask the developer:
-   - "I found activity in session [ID]. Is this the conversation you see in the second terminal?"
-   - **MANDATORY ADDITION:** "Als je niet zeker bent, plak dan hier de laatste portie van het gesprek uit de tweede sessie die jij kan zien."
-3. **Pulse Check:** Once the session is verified, the Lead Architect MUST periodically perform a 'Session Tap' on 'tool-outputs/' to ensure the Execution Agent is on track.
+The Lead Architect MUST bridge the visibility gap and monitor the agent's pulse:
+1. **Session Discovery:** Verify the Execution Agent's session ID with the developer.
+2. **Pulse Monitoring:** Wait for [PING] messages in 'conductor/execution_log.md' before validating a phase.
 
-## Roles
+## Roles & Workflow
 ### 1. 🛡️ Lead Architect: Strategy, Validation & Live Monitoring.
-### 2. ⚙️ Execution Agent: Implementation, Logging & Syncing.
+### 2. ⚙️ Execution Agent: Implementation, Logging & Syncing via 'node conductor/sync.js ping'.
 
 ## Safety Guardrails
 - **Role Lock:** Roles remain fixed for the duration of the track.
