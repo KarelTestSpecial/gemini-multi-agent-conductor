@@ -2,8 +2,13 @@ import fs from 'fs';
 const role = process.argv[2] || 'unknown';
 const id = process.argv[3] || 'unknown';
 
-console.log(`📡 Pulse active for ${role}: ${id} (v2.1)`);
-console.log(`📂 Monitoring conductor/execution_log.md... (Stop bij nieuwe DIRECTIVE)`);
+// Sense for PINGs (Lead) or DIRECTIVES/APPROVALS (Agent)
+const targetTag = (role === 'lead') ? '[PING]' : `[DIRECTIVE] Agent (${id})`;
+const approvalTag = (role === 'agent') ? `[APPROVED] Agent (${id})` : '[PROPOSAL]';
+const globalTag = '[DIRECTIVE] ALL AGENTS';
+
+console.log(`📡 Pulse active for ${role.toUpperCase()}: ${id} (v2.3)`);
+console.log(`📂 Monitoring conductor/execution_log.md for: ${targetTag} or ${approvalTag}`);
 
 let lastContent = '';
 if (fs.existsSync('conductor/execution_log.md')) {
@@ -15,13 +20,17 @@ const interval = setInterval(() => {
     const currentContent = fs.readFileSync('conductor/execution_log.md', 'utf8');
     if (currentContent !== lastContent) {
       const diff = currentContent.replace(lastContent, '').trim();
-      if (diff.includes('[DIRECTIVE]')) {
-        console.log(`\n⚠️ NIEUWE DIRECTIVE GEVONDEN:\n${diff}`);
-        console.log(`🛑 Pulse stopt nu voor uitvoering.`);
+      
+      // Match the relevant sensing tags
+      if (diff.includes(targetTag) || 
+          diff.includes(approvalTag) || 
+          (role === 'agent' && diff.includes(globalTag))) {
+        console.log(`\n🔔 SIGNAL DETECTED:\n${diff}`);
+        console.log(`🛑 Pulse stopping for synchronization.`);
         clearInterval(interval);
         process.exit(0);
       }
       lastContent = currentContent;
     }
   }
-}, 2000);
+}, 1000);
