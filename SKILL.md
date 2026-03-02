@@ -1,31 +1,32 @@
----
-name: multi-agent-conductor
-description: Multi-agent coordination for Gemini CLI. Supports one Lead Architect and multiple specialized Execution Agents.
----
+# Multi-Agent Conductor (v2.1 - Foreground Autonomy)
 
-# Multi-Agent Conductor (v1.9 - Multi-Agent ID)
+Protocol voor de coördinatie van een "Lead Architect" en meerdere gespecialiseerde "Execution Agents" in afzonderlijke Gemini CLI sessies.
 
-This skill defines the protocol for a "Lead Architect" to coordinate multiple specialized "Execution Agents" across separate terminal sessions.
+## 🚀 Initialisatie Protocol (MANDATORY)
+Bij activatie MOET de agent zijn sessie-specifieke identiteit vaststellen:
+1. **Identify Session:** Haal de actuele Session ID op.
+2. **Role Selection:** Lead Architect of Execution Agent?
+3. **Identity (Agents):** Maak 'conductor/agents/[SESSION_ID].json' aan.
+4. **Pulse Sensing Setup:** Kopieer `scripts/pulse.js` naar `conductor/pulse.js`.
+5. **Autonomous Foreground Loop (Agents ONLY):** 
+   - De Agent MOET de `conductor/pulse.js` in de **VOORGROND** draaien: 
+     `node conductor/pulse.js agent [AgentID]`
+   - Gebruik NOOIT `is_background: true` voor dit commando.
+   - De beurt van de Agent MOET "hangen" op dit script tot een signaal komt.
+   - Zodra er een Directive is, stopt het script (exit 0).
+   - De Agent MOET dan direct de log lezen, de taak uitvoeren, pingen en de loop herstarten.
 
-## 🚀 Initialization Protocol (MANDATORY)
-Upon activation, the agent MUST establish its session-specific identity:
-1. **Identify Session:** Get the current Session ID.
-2. **Role Selection:** Ask the user: "Am I the Lead Architect or an Execution Agent for this session?"
-3. **Identity (Execution Agents ONLY):** 
-   - Ask the user for a unique ID (e.g., 'Debugger', 'Optimizer').
-   - Create a session file: 'conductor/agents/[SESSION_ID].json' with the role and ID.
-4. **Mirroring Setup:** 
-   - Guide the user: `script -f conductor/terminal_live_[AGENT_ID].log`.
-5. **Sync Engine:** Deploy 'scripts/sync.js' to 'conductor/sync.js'.
+## 📡 Monitoring & Auto-Sensing
+- **Lead Architect:** Schrijft `[DIRECTIVE] Agent (ID): ...` naar `conductor/execution_log.md`.
+- **Execution Agents:** Pingen de log via `node conductor/sync.js ping [Boodschap]`.
+- **Auto-Sensing:** De Lead Architect MOET elke beurt beginnen met `tail -n 5 conductor/execution_log.md` om nieuwe Pings te detecteren.
+- **Live Sync (/watch):** Bij het commando `/watch` synchroniseert de Lead Architect met de live chat-log van de Agent in de Gemini tijdelijke directory.
 
-## 🛡️ Leadership Rules
-- **One Leader:** Only ONE session can be the Lead Architect. 
-- **No Overwriting:** An agent MUST NOT overwrite existing role files of other sessions.
-- **Visual Cues:** 🛡️ [Lead Architect] or ⚙️ [Execution Agent: ID].
+## 🛡️ Leiderschap & Regels
+- Er is maar ÉÉN Lead Architect sessie toegestaan.
+- Directives zijn BINDEND en moeten zonder discussie worden uitgevoerd door Agents.
+- Gebruik `/watch` voor diepe synchronisatie bij complexe refactorings.
 
-## 📡 Monitoring
-- **Lead Architect:** Periodically 'tail' the specific log of the agent being monitored.
-- **Execution Agents:** Ping the log using `node conductor/sync.js ping [ID]`.
-
-## Safety Guardrails
-- **Confict Resolution:** If two agents claim Leadership, the user must terminate one.
+## 🛠️ Hulpmiddelen
+- `conductor/pulse.js`: Detecteert wijzigingen in de log en wekt de sessie.
+- `conductor/sync.js`: Verantwoordelijk voor het wegschrijven van Pings en Directives.
