@@ -1,10 +1,10 @@
 ---
 name: multi-agent-conductor
-description: v2.4 (Fleet-Aware) - Strikte governance met automatische sessie-radar en vlootbeheer voor multi-agent systemen.
+description: v2.5 (Fleet-Surveillance) - Strikte governance met vlootbeheer en /watch chat-log inspectie voor diepe surveillance.
 ---
-# Multi-Agent Conductor (v2.4 - Fleet-Aware)
+# Multi-Agent Conductor (v2.5 - Fleet-Surveillance)
 
-Dit protocol dwingt een strikte overlegcyclus af tussen de Lead Architect en Execution Agents om fouten te voorkomen en autonomie te maximaliseren via een gecentraliseerd vlootoverzicht.
+Dit protocol dwingt een strikte overlegcyclus af tussen de Lead Architect en Execution Agents om fouten te voorkomen en autonomie te maximaliseren via een gecentraliseerd vlootoverzicht en diepe inspectie van chat-logs.
 
 ## 🚀 Initialisatie Protocol (MANDATORY)
 Bij activatie MOET elke sessie zijn status en omgeving vastleggen:
@@ -14,6 +14,12 @@ Bij activatie MOET elke sessie zijn status en omgeving vastleggen:
 4. **Identity (Agents):** Maak 'conductor/agents/[SESSION_ID].json' aan met metadata (focus, status).
 5. **Pulse Sensing Setup:** Kopieer 'scripts/pulse.js' naar 'conductor/pulse.js'.
 
+## 📡 Monitoring & Sensing (Architect ONLY)
+De Lead Architect monitort de vloot en stuurt aan via:
+- **Directives:** 'node conductor/pulse.js architect [AgentID] [Message]'
+- **[NEW] /watch [AgentID]:** Voer een diepe inspectie uit op de fysieke chat-logs (.json bestanden in de tmp-directory) van de agent om de interne redenering (Thought Signatures) en tool-uitvoering te verifiëren.
+- **Logboek:** Alle acties worden gelogd in 'conductor/execution_log.md'.
+
 ## 🤝 De Governance Loop (Agents ONLY)
 Execution Agents volgen verplicht deze stappen voor elke actie:
 1. **Step A (Wait):** Draai 'node conductor/pulse.js agent [AgentID]' in de VOORGROND. Wacht op '[DIRECTIVE]' of '[APPROVED]'.
@@ -21,8 +27,3 @@ Execution Agents volgen verplicht deze stappen voor elke actie:
 3. **Step C (Hold):** Herstart Pulse en wacht op '[APPROVED]' van de Lead Architect.
 4. **Step D (Execute):** Voer de actie uit na expliciete goedkeuring.
 5. **Step E (Finalize):** Stuur een '[PING]' en ga terug naar Step A.
-
-## 📡 Monitoring & Sensing (Architect ONLY)
-De Lead Architect monitort de vloot en stuurt aan via:
-- **Directives:** 'node conductor/pulse.js architect [AgentID] [Message]'
-- **Logboek:** Alle acties worden gelogd in 'conductor/execution_log.md' met tijdstempel en AgentID.
