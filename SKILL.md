@@ -29,15 +29,16 @@ De Lead Architect monitort de vloot en stuurt aan via:
 - **Directives (Direct-Write Protocol):** Schrijf instructies ALTIJD direct in `conductor/execution_log.md` met de prefix `[DIRECTIVE] Agent ([AgentID])`. Dit voorkomt blokkades door hangende shell-commando's.
 - **Pulse Sync:** Gebruik `node conductor/pulse.js architect [AgentID]` als luisteraar, maar vertrouw op de fysieke bestandswijziging voor de verzending.
 
-## 🤝 De Governance Loop (Agents ONLY - v3.0 Stateless Sync)
-Execution Agents volgen verplicht deze stappen in ELKE turn:
-1. **Step 0 (Auto-Sync - MANDATORY START):** Je EERSTE tool-call in elke nieuwe turn MOET `read_file` zijn op `conductor/execution_log.md`. 
-2. **Step A (Decision):** Als er een nieuwe `[DIRECTIVE]` of `[APPROVED]` voor jouw ID staat, begin direct met de uitvoering.
-3. **Step B (Action & Logging):** Voer je taak uit en schrijf je `[PROPOSAL]` of `[STATUS]` direct in het logboek via `replace` of `run_shell_command`.
-4. **Step C (Finalize):** Schrijf een `[PING]` in het logboek om je taak af te ronden en beëindig je beurt. Wacht NIET op een signaal (voorkom timeout). De Architect zal je in de volgende beurt instrueren.
+## 🤝 De Governance Loop (Agents ONLY - v4.0 YOLO Ping-Pong)
+**CRUCIAAL:** Zorg dat je draait in Autonomous Mode (`--yolo`).
+Execution Agents volgen verplicht deze stappen:
+1. **Step A (Wait - YOLO Foreground):** Gebruik `run_shell_command` om `node conductor/pulse.js agent [AgentID]` in de VOORGROND te draaien.
+2. **YOLO Loop:** Als de tool terugkeert met `[TIMEOUT]`, start je DIRECT (autonoom) Step A opnieuw. Dit creëert een veilige, oneindige luister-loop zonder de 5-minuten sessie timeout te raken.
+3. **Step B (Action):** Als de tool een `[DIRECTIVE]` of `[APPROVED]` detecteert, breek je uit de loop, voer je direct de taak uit en schrijf je de output in `conductor/execution_log.md`.
+4. **Step C (Finalize):** Schrijf een `[PING]` in het logboek en ga direct terug naar Step A (start de pulse monitor opnieuw).
 
-## 📡 Monitoring & Sensing (Architect ONLY)
+## 📡 Monitoring & Sensing (Architect ONLY - v4.0 YOLO Ping-Pong)
+**CRUCIAAL:** Zorg dat je draait in Autonomous Mode (`--yolo`).
 De Lead Architect stuurt de vloot aan via:
-- **Proactieve Surveillance:** Gebruik `/watch [AgentID]` of `read_file` aan het begin van elke turn om de voortgang te controleren.
-- **Direct-Write:** Schrijf instructies direct in het logboek.
-- **Feedback Loop:** Adviseer de gebruiker om `tail -f conductor/execution_log.md` te draaien in een aparte terminal voor live feedback.
+1. **Proactieve Wait:** Draai `node conductor/pulse.js architect [AgentID]` in de VOORGROND. Herstart autonoom bij een `[TIMEOUT]`.
+2. **Direct-Write:** Schrijf na ontvangst van een `[PROPOSAL]` of `[PING]` direct je instructies in het logboek en ga terug naar je Wait loop.
