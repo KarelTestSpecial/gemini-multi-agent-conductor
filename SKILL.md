@@ -31,8 +31,15 @@ De Lead Architect monitort de vloot en stuurt aan via:
 
 ## 🤝 De Governance Loop (Agents ONLY)
 Execution Agents volgen verplicht deze stappen:
-1. **Step A (Wait):** Draai `node conductor/pulse.js agent [AgentID]`. Wacht op `[DIRECTIVE]` in het logboek.
-2. **Step B (Propose - Direct-Write):** Schrijf na een directive ALTIJD direct een `[PROPOSAL]` in `conductor/execution_log.md`.
-3. **Step C (Hold):** Wacht op `[APPROVED]` in het logboek via Pulse.
-4. **Step D (Execute):** Voer de actie uit na expliciete goedkeuring.
-5. **Step E (Finalize):** Schrijf een `[PING]` direct in het logboek en ga terug naar Step A.
+1. **Step A (Wait - Background):** Start de monitor in de ACHTERGROND en log de output: `node conductor/pulse.js agent [AgentID] > conductor/pulse_[AgentID].log 2>&1` (met `is_background: true`). Dit voorkomt sessie-timeouts en biedt visuele feedback.
+2. **Heartbeat (MANDATORY):** Werk bij elke actie de `status` en `lastSeen` timestamp bij in `conductor/agents/[AGENT_ID].json`.
+3. **Step B (Propose - Direct-Write):** Zodra een `[DIRECTIVE]` wordt gedetecteerd, schrijf direct een `[PROPOSAL]` in `conductor/execution_log.md`.
+4. **Step C (Hold):** Herstart de achtergrond-monitor en log naar het `.log` bestand.
+5. **Step D (Execute):** Voer de actie uit na expliciete goedkeuring.
+6. **Step E (Finalize):** Schrijf een `[PING]` direct in het logboek en ga terug naar Step A.
+
+## 📡 Monitoring & Sensing (Architect ONLY)
+De Lead Architect monitort de vloot via:
+- **Directives (Direct-Write Protocol):** Schrijf instructies ALTIJD direct in `conductor/execution_log.md`.
+- **Pulse-Log Inspectie:** Gebruik `cat conductor/pulse_[AgentID].log` voor live feedback op de monitor-status van de agent.
+- **Watch Protocol:** Gebruik `/watch [AgentID]` voor diepe inspectie van de agent-redenering.
