@@ -1,43 +1,32 @@
 import fs from 'fs';
 import path from 'path';
 
-const role = process.argv[2] || 'unknown';
-const id = process.argv[3] || 'ALL';
-const logFile = 'conductor/execution_log.md';
+const role = process.argv[2];
+const id = process.argv[3] || 'A1';
+const signalDir = 'conductor';
+// ARCHITECT wacht op ARCHITECT.GO, AGENT wacht op AGENT.GO
+const signalFile = path.join(signalDir, (role === 'architect' || role === 'lead') ? 'ARCHITECT.GO' : 'AGENT.GO');
 
-console.log('📡 Pulse v2.4 (Fleet-Aware) active for ' + role.toUpperCase() + ': ' + id);
+console.log(`📡 [PULSE v9.0] ${role.toUpperCase()} listening for ${signalFile}...`);
 
-if (!fs.existsSync(logFile)) {
-  fs.writeFileSync(logFile, '# Execution Log - Initialized\n');
+function checkSignal() {
+    if (fs.existsSync(signalFile)) {
+        console.log(`\n✅ [SIGNAL DETECTED] ${signalFile} found!`);
+        // We verwijderen het bestand direct (Acknowledge)
+        try { fs.unlinkSync(signalFile); } catch (e) {}
+        process.exit(0);
+    }
 }
 
-let lastSize = fs.statSync(logFile).size;
+// Initial Scan
+checkSignal();
 
-const isArchitect = (role === 'architect' || role === 'lead');
-const isAgent = (role === 'agent');
+// Polling Loop (Elke 500ms voor maximale betrouwbaarheid)
+const interval = setInterval(checkSignal, 500);
 
-const interval = setInterval(() => {
-  const stats = fs.statSync(logFile);
-  if (stats.size > lastSize) {
-    const fd = fs.openSync(logFile, 'r');
-    const buffer = Buffer.alloc(stats.size - lastSize);
-    fs.readSync(fd, buffer, 0, stats.size - lastSize, lastSize);
-    fs.closeSync(fd);
-
-    const diff = buffer.toString().trim();
-    lastSize = stats.size;
-
-    if (diff) {
-      if (isArchitect && (diff.includes('[PING]') || diff.includes('[PROPOSAL]'))) {
-        console.log('\n🔔 SIGNAL DETECTED for Architect:\n' + diff);
-        clearInterval(interval);
-        process.exit(0);
-      }
-      if (isAgent && (diff.includes('[DIRECTIVE] Agent (' + id + ')') || diff.includes('[DIRECTIVE] ALL') || diff.includes('[APPROVED] Agent (' + id + ')'))) {
-        console.log('\n🔔 SIGNAL DETECTED for Agent ' + id + ':\n' + diff);
-        clearInterval(interval);
-        process.exit(0);
-      }
-    }
-  }
-}, 1000);
+// Safety Timeout (280s)
+setTimeout(() => {
+    clearInterval(interval);
+    console.log(`\n⏳ [TIMEOUT] No signal.`);
+    process.exit(2);
+}, 280000);
